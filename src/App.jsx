@@ -12,6 +12,7 @@ function App() {
 		hex: "#ffffff",
 		rgba: { r: 255, g: 255, b: 255, a: 100 },
 		hsva: { a: 1, h: 0, s: 0, v: 100 },
+		hsla: { a: 1, h: 0, s: 0, l: 100 },
 	};
 
 	const [color, setColor] = useState(DEFAULT_WHITE);
@@ -25,6 +26,16 @@ function App() {
 	const rgbaValue = `rgb(${color.rgba.r} ${color.rgba.g} ${color.rgba.b}${
 		color.rgba.a == 1 ? "" : " / " + color.rgba.a.toFixed(2)
 	})`;
+
+	const debounce = (callback, wait) => {
+		let timeoutId = null;
+		return (...args) => {
+			window.clearTimeout(timeoutId);
+			timeoutId = window.setTimeout(() => {
+				callback(...args);
+			}, wait);
+		};
+	};
 
 	useHotkeys(
 		"ctrl+z",
@@ -43,12 +54,10 @@ function App() {
 		(e) => {
 			e.preventDefault();
 			setShowHistory(!showHistory);
-			
 		},
 		[showHistory]
 	);
 
-	
 	useEffect(() => {
 		const mouseDownHandler = (e) => {
 			console.log("Mouse down?");
@@ -62,20 +71,23 @@ function App() {
 
 		const colorSlideRefElements = [saturationRef.current, hueRef.current];
 		const hookEvents = {
-			"mousedown": mouseDownHandler,
-			"touchstart": mouseDownHandler,
-		}
+			mousedown: mouseDownHandler,
+			touchstart: mouseDownHandler,
+		};
 
-		for(const colorSlideElement of colorSlideRefElements){
-			if(!colorSlideElement){
+		for (const colorSlideElement of colorSlideRefElements) {
+			if (!colorSlideElement) {
 				console.error(
 					"Couldn't get ref to color silde element (for tracking mouse holding in order to save history)...",
 					colorSlideElement
 				);
 				continue;
 			}
-			for(const hookEvent in hookEvents){
-				colorSlideElement.addEventListener(hookEvent, hookEvents[hookEvent]);
+			for (const hookEvent in hookEvents) {
+				colorSlideElement.addEventListener(
+					hookEvent,
+					hookEvents[hookEvent]
+				);
 			}
 		}
 
@@ -83,12 +95,15 @@ function App() {
 		window.addEventListener("touchend", mouseUpHandler);
 
 		return () => {
-			for(const colorSlideElement of colorSlideRefElements){
-				if(!colorSlideElement){
+			for (const colorSlideElement of colorSlideRefElements) {
+				if (!colorSlideElement) {
 					continue;
 				}
-				for(const hookEvent in hookEvents){
-					colorSlideElement.removeEventListener(hookEvent, hookEvents[hookEvent]);
+				for (const hookEvent in hookEvents) {
+					colorSlideElement.removeEventListener(
+						hookEvent,
+						hookEvents[hookEvent]
+					);
 				}
 			}
 			window.removeEventListener("mouseup", mouseUpHandler);
@@ -98,29 +113,40 @@ function App() {
 
 	useEffect(() => {
 		if (
-			((!isMouseDown && isMouseDown !== null) || (isMouseDown == null && !color.is_default)) &&
+			((!isMouseDown && isMouseDown !== null) ||
+				(isMouseDown == null && !color.is_default)) &&
 			color &&
 			color.hex
 		) {
-			setHistory((history) => {
-				//skip in case no color changed
-				if (
-					history.length &&
-					history[history.length - 1].hex == color.hex
-				) {
-					return history;
-				}
-				return [...history, color];
-			});
+			const handler = setTimeout(() => {
+				setHistory((history) => {
+					// skip in case no color changed
+					if (
+						history.length &&
+						history[history.length - 1].hex === color.hex
+					) {
+						return history;
+					}
+					return [...history, color];
+				});
+			}, 250);
+			
+			//debounce by 250ms in order to avoid too many colors during a wheel scroll on hue
+			return ()=> {
+				clearTimeout(handler);
+			}
 		}
+		
 	}, [color, isMouseDown]);
 
 	useEffect(() => {
 		console.log("History: ", history);
-		if(!window.localStorage.getItem("showTips") && history.length){
+		if (!window.localStorage.getItem("showTips") && history.length) {
 			window.localStorage.setItem("showTips", true);
-			setTimeout(()=>{
-				alert("Tip: Press \"CTRL+H\" to see the history of colors you have picked :)");
+			setTimeout(() => {
+				alert(
+					'Tip: Press "CTRL+H" to see the history of colors you have picked :)'
+				);
 			}, 5000);
 		}
 	}, [history]);
@@ -174,9 +200,9 @@ function App() {
 
 			{showHistory && (
 				<div className="color-history">
-					<div 
+					<div
 						className="color-history-close"
-						onClick={(e)=>{
+						onClick={(e) => {
 							setShowHistory(false);
 						}}
 					>
@@ -207,7 +233,7 @@ function App() {
 
 						{!history.length ? (
 							<div className="empty">Nothing here yet :)</div>
-						): null}
+						) : null}
 					</div>
 				</div>
 			)}
