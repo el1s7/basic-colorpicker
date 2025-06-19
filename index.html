@@ -16,7 +16,18 @@
       if (!isBrowser) {
          window.resizeTo(500, 380);
       }
-    });
+      });
+
+      //Prevent resize
+      window.addEventListener("resize", event => {
+        event.preventDefault();
+         isBrowser = matchMedia("(display-mode: browser)").matches;
+         if (!isBrowser) {
+            window.resizeTo(500, 380);
+        }
+      });
+
+
     </script>
   </body>
 </html>

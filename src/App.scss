@@ -11,13 +11,21 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
-body {
-	margin: 0;
-	overflow: hidden;
+html, body {
+	height: 100%;
+	margin: 0px;
 }
-
+#root{
+	align-items: center;
+  	display: flex;
+  	justify-content: center;
+  	height: 100%;
+  	width: 100%;
+}
 .color-picker {
-
+	
+	width: 500px;
+	max-height: 380px;
 	
 	--border-color: rgb(0 0 0 / 0.2);
 	.w-color-github {
@@ -27,7 +35,6 @@ body {
 		--github-border: none !important;
 	}
 
-	
 	.color-value-block {
 		padding: 10px;
 		.color-value {
@@ -130,3 +137,9 @@ body {
 
 
 
+@media (display-mode: browser), (display-mode: fullscreen) {
+	.color-picker{
+		border: 1px solid var(--border-color);
+		border-radius: 5px;
+	}
+}
