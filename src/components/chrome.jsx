@@ -58,7 +58,7 @@ const Chrome = React.forwardRef((props, ref) => {
     let result = hexToHsva(hex)
     handleChange({ ...result })
   }
-  const styleSize = { height: 14, width: 14 }
+  const styleSize = { height: 20, width: 20 }
   const pointerProps = {
     style: { ...styleSize },
     fillProps: { style: styleSize }
@@ -114,7 +114,7 @@ const Chrome = React.forwardRef((props, ref) => {
                 <div ref={hueRef}>
                   <Hue
                     hue={hsva.h}
-                    style={{ width: "100%", height: 12, borderRadius: 2 }}
+                    style={{ width: "100%", height: 18, borderRadius: 2 }}
                     pointerProps={pointerProps}
                     bgProps={{
                       style: { borderRadius: 2 }
@@ -126,7 +126,7 @@ const Chrome = React.forwardRef((props, ref) => {
                 </div>
                 <Alpha
                   hsva={hsva}
-                  style={{ marginTop: 6, height: 12, borderRadius: 2 }}
+                  style={{ marginTop: 6, height: 18, borderRadius: 2 }}
                   pointerProps={pointerProps}
                   bgProps={{
                     style: { borderRadius: 2 }
