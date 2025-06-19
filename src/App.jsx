@@ -10,8 +10,8 @@ function App() {
 		is_default: true,
 		hexa: "#ffffffff",
 		hex: "#ffffff",
-		rgba: { r: 255, g: 255, b: 255, a: 0 },
-		hsva: { a: 0, h: 0, s: 0, v: 100 },
+		rgba: { r: 255, g: 255, b: 255, a: 100 },
+		hsva: { a: 1, h: 0, s: 0, v: 100 },
 	};
 
 	const [color, setColor] = useState(DEFAULT_WHITE);
