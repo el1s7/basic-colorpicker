@@ -5,12 +5,22 @@ import Chrome from "./components/chrome.jsx";
 
 import { useHotkeys } from "react-hotkeys-hook";
 
+import {
+	color as handleColor,
+	validHex,
+	hexToHsva,
+	rgbStringToHsva,
+	rgbaStringToHsva
+} from "@uiw/color-convert";
+import { isValidRgbOrRgba } from "./helpers/functions.js";
+
+
 function App() {
 	const DEFAULT_WHITE = {
 		is_default: true,
 		hexa: "#ffffffff",
 		hex: "#ffffff",
-		rgba: { r: 255, g: 255, b: 255, a: 100 },
+		rgba: { r: 255, g: 255, b: 255, a: 1 },
 		hsva: { a: 1, h: 0, s: 0, v: 100 },
 		hsla: { a: 1, h: 0, s: 0, l: 100 },
 	};
@@ -22,6 +32,7 @@ function App() {
 
 	const saturationRef = useRef(null);
 	const hueRef = useRef(null);
+	const debounceTimerRef = useRef(0);
 
 	const rgbaValue = `rgb(${color.rgba.r} ${color.rgba.g} ${color.rgba.b}${
 		color.rgba.a == 1 ? "" : " / " + color.rgba.a.toFixed(2)
@@ -46,6 +57,10 @@ function App() {
 				setColor(lastColor);
 			}
 		},
+		{
+			'document': document.documentElement,
+			'enableOnFormTags': true	
+		},
 		[history]
 	);
 
@@ -55,12 +70,18 @@ function App() {
 			e.preventDefault();
 			setShowHistory(!showHistory);
 		},
+		{
+			'document': document.documentElement,
+			'enableOnFormTags': true	
+		},
 		[showHistory]
 	);
 
 	useEffect(() => {
 		const mouseDownHandler = (e) => {
 			console.log("Mouse down?");
+			clearTimeout(debounceTimerRef.current);
+
 			setIsMouseDown(true);
 		};
 
@@ -69,10 +90,22 @@ function App() {
 			setIsMouseDown(false);
 		};
 
+		const wheelHandler = (e) => {
+			console.log("Mouse down?");
+			setIsMouseDown(true);
+
+			//Clear any previous timeout
+			clearTimeout(debounceTimerRef.current);
+
+			debounceTimerRef.current = setTimeout(()=>{
+				setIsMouseDown(false);
+			}, 2500);
+		};
+
 		const colorSlideRefElements = [saturationRef.current, hueRef.current];
 		const hookEvents = {
-			mousedown: mouseDownHandler,
-			touchstart: mouseDownHandler,
+			"mousedown": mouseDownHandler,
+			"touchstart": mouseDownHandler
 		};
 
 		for (const colorSlideElement of colorSlideRefElements) {
@@ -89,6 +122,10 @@ function App() {
 					hookEvents[hookEvent]
 				);
 			}
+		}
+
+		if(hueRef.current){
+			hueRef.current.addEventListener("wheel", wheelHandler);
 		}
 
 		window.addEventListener("mouseup", mouseUpHandler);
@@ -108,6 +145,11 @@ function App() {
 			}
 			window.removeEventListener("mouseup", mouseUpHandler);
 			window.removeEventListener("touchend", mouseUpHandler);
+
+			if(hueRef.current){
+				hueRef.current.removeEventListener("wheel", wheelHandler);
+			}
+
 		};
 	}, []);
 
@@ -118,25 +160,19 @@ function App() {
 			color &&
 			color.hex
 		) {
-			const handler = setTimeout(() => {
-				setHistory((history) => {
-					// skip in case no color changed
-					if (
-						history.length &&
-						history[history.length - 1].hex === color.hex
-					) {
-						return history;
-					}
-					return [...history, color];
-				});
-			}, 250);
 			
-			//debounce by 250ms in order to avoid too many colors during a wheel scroll on hue
-			return ()=> {
-				clearTimeout(handler);
-			}
+			setHistory((history) => {
+				// skip in case no color changed
+				if (
+					history.length &&
+					history[history.length - 1].hex === color.hex
+				) {
+					return history;
+				}
+				return [...history, color];
+			});
+
 		}
-		
 	}, [color, isMouseDown]);
 
 	useEffect(() => {
@@ -151,6 +187,25 @@ function App() {
 		}
 	}, [history]);
 
+	const handleHexColorPaste = (e) => {
+		let pastedValue = e.clipboardData.getData("text");
+		if (pastedValue && validHex(pastedValue)) {
+			let convertedColor = hexToHsva(pastedValue);
+			setColor(handleColor(convertedColor));
+		} else {
+			alert('Invalid hex color pasted: \n"' + pastedValue + '"');
+		}
+	};
+
+	const handleRgbaColorPaste = (e) => {
+		let pastedValue = e.clipboardData.getData("text");
+		if(pastedValue && isValidRgbOrRgba(pastedValue)){
+			let convertedColor = rgbaStringToHsva(pastedValue);
+			setColor(handleColor(convertedColor));
+		} else {
+			alert('Invalid rgb color pasted: \n"' + pastedValue + '"');
+		}
+	};
 	return (
 		<>
 			<div className="color-picker">
@@ -170,6 +225,7 @@ function App() {
 						<input
 							type="text"
 							readOnly
+							onPaste={handleHexColorPaste}
 							name="color"
 							onClick={(e) => {
 								e.target.select();
@@ -179,6 +235,7 @@ function App() {
 						<input
 							type="text"
 							readOnly
+							onPaste={handleHexColorPaste}
 							name="color"
 							onClick={(e) => {
 								e.target.select();
@@ -189,6 +246,7 @@ function App() {
 							type="text"
 							readOnly
 							name="color"
+							onPaste={handleRgbaColorPaste}
 							onClick={(e) => {
 								e.target.select();
 							}}
